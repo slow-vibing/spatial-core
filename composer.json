@@ -1,0 +1,38 @@
+{
+    "name": "app/spatial-core",
+    "description": "App Spatial Proprietary Geospatial, Coverage & Feasibility Engine with Cryptographic Licensing",
+    "type": "library",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Slow-but-sure Vibing"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "ext-pdo": "*",
+        "ext-openssl": "*",
+        "ext-json": "*",
+        "ext-curl": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\SpatialCore\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "App\\SpatialCore\\Tests\\": "tests/"
+        }
+    },
+    "bin": [
+                "bin/spatial-licverify"
+    ],
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true
+    }
+}

@@ -1,0 +1,72 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+# Look for Composer autoloader or load library files directly
+if (file_exists(__DIR__ . '/../../../autoload.php')) {
+    require_once __DIR__ . '/../../../autoload.php';
+} elseif (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+} else {
+    spl_autoload_register(function ($class) {
+        $prefix = 'App\\SpatialCore\\';
+        $baseDir = __DIR__ . '/../src/';
+        if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
+            return;
+        }
+        $relativeClass = substr($class, strlen($prefix));
+        $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+        }
+    });
+}
+
+use App\SpatialCore\Licensing\LicenseManager;
+
+$options = getopt('', [
+    'file:',
+    'help',
+]);
+
+if (isset($options['help'])) {
+    echo <<<HELP
+App Spatial License Verifier (spatial-licverify)
+==================================================
+Usage:
+  php bin/spatial-licverify [--file=<path_to_license>]
+
+Options:
+  --file=<path>   Path to license.lic (default: searches application root, writable/, or SPATIAL_LICENSE_PATH)
+  --help          Show this help screen
+
+Examples:
+  php bin/spatial-licverify
+  php bin/spatial-licverify --file="/path/to/custom/license.lic"
+
+HELP;
+    exit(0);
+}
+
+$targetFile = isset($options['file']) ? (string)$options['file'] : null;
+
+echo "=== App Spatial License Verification ===\n";
+
+try {
+    $manager = LicenseManager::getInstance($targetFile);
+    $manager->assertValid();
+    $info = $manager->getLicenseInfo();
+
+    echo "\033[32m[SUCCESS] License is VALID and cryptographically verified!\033[0m\n\n";
+    echo "  Client / Org:    " . ($info['client'] ?? 'N/A') . "\n";
+    echo "  Issued At:       " . ($info['issued_at'] ?? 'N/A') . "\n";
+    echo "  Expires At:      " . ($info['expires_at'] ?? 'N/A') . "\n";
+    echo "  Allowed IPs:     " . implode(', ', (array)($info['allowed_ips'] ?? [])) . "\n";
+    echo "  Allowed Domains: " . implode(', ', (array)($info['allowed_domains'] ?? [])) . "\n";
+    echo "  Active Features: " . implode(', ', (array)($info['features'] ?? [])) . "\n";
+    exit(0);
+} catch (\Throwable $e) {
+    echo "\033[31m[FAILED] " . $e->getMessage() . "\033[0m\n";
+    exit(1);
+}
